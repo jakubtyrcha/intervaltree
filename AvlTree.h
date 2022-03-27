@@ -125,6 +125,7 @@ AvlTree::NodePtr AvlTree::SubtreeInsert(NodePtr root, TKey k, TValue v) {
     NodePtr node = NewNode();
     NodeAt(node).key = k;
     NodeAt(node).value = v;
+    NodeAt(node).height = 1;
     return node;
   }
 
@@ -195,7 +196,28 @@ AvlTree::NodePtr AvlTree::SubtreeRemove(NodePtr root, TKey k) {
     NodeAt(newRoot).height = 1 + max(GetHeight(NodeAt(newRoot).left),
                                      GetHeight(NodeAt(newRoot).right));
     i32 balance = GetBalance(newRoot);
-    // TODO: rebalance
+    
+    // left left
+    if (balance < -1 && GetBalance(NodeAt(newRoot).left) <= 0) {
+      return RightRotate(newRoot);
+    }
+
+    // right right
+    if (1 < balance && 0 <= GetBalance(NodeAt(newRoot).right)) {
+      return LeftRotate(newRoot);
+    }
+
+    // left right
+    if(balance < -1 && 0 < GetBalance(NodeAt(newRoot).left)) {
+      NodeAt(newRoot).left = LeftRotate(NodeAt(newRoot).left);
+      return RightRotate(newRoot);
+    }
+
+    // right left
+    if (1 < balance && GetBalance(NodeAt(newRoot).right) < 0) {
+      NodeAt(newRoot).right = RightRotate(NodeAt(newRoot).right);
+      return LeftRotate(newRoot);
+    }
   }
 
   return newRoot;

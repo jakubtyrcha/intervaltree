@@ -4,13 +4,24 @@
 #include <catch2/catch_test_macros.hpp>
 #include <random>
 
-
 TEST_CASE("Can read from empty tree and update the root", "[avl_tree]") {
   AvlTree tree;
   REQUIRE(tree.Find(0) == std::nullopt);
   tree.Insert(0, 1);
   REQUIRE(tree.Find(0) == 1);
   REQUIRE(tree.Find(1) == std::nullopt);
+}
+
+TEST_CASE("Can get tree height", "[avl_tree]") {
+  AvlTree tree;
+  REQUIRE(tree.GetHeight() == 0);
+  tree.Insert(1, 1);
+  REQUIRE(tree.GetHeight() == 1);
+  tree.Insert(0, 0);
+  tree.Insert(2, 2);
+  REQUIRE(tree.GetHeight() == 2);
+  tree.Insert(3, 3);
+  REQUIRE(tree.GetHeight() == 3);
 }
 
 TEST_CASE("Can insert 0, 1, 2", "[avl_tree]") {
@@ -89,7 +100,7 @@ TEST_CASE("Test left left balance case", "[avl_tree]") {
   REQUIRE(tree.Find(3) == 3);
   REQUIRE(tree.Find(4) == 4);
   REQUIRE(tree.Find(5) == 5);
-  REQUIRE(tree.GetHeight() == 2);
+  REQUIRE(tree.GetHeight() == 3);
 }
 
 TEST_CASE("Test right right balance case", "[avl_tree]") {
@@ -106,7 +117,7 @@ TEST_CASE("Test right right balance case", "[avl_tree]") {
   REQUIRE(tree.Find(3) == 3);
   REQUIRE(tree.Find(4) == 4);
   REQUIRE(tree.Find(5) == 5);
-  REQUIRE(tree.GetHeight() == 2);
+  REQUIRE(tree.GetHeight() == 3);
 }
 
 TEST_CASE("Test left right balance case", "[avl_tree]") {
@@ -123,7 +134,7 @@ TEST_CASE("Test left right balance case", "[avl_tree]") {
   REQUIRE(tree.Find(3) == 3);
   REQUIRE(tree.Find(4) == 4);
   REQUIRE(tree.Find(5) == 5);
-  REQUIRE(tree.GetHeight() == 2);
+  REQUIRE(tree.GetHeight() == 3);
 }
 
 TEST_CASE("Test right left balance case", "[avl_tree]") {
@@ -140,7 +151,7 @@ TEST_CASE("Test right left balance case", "[avl_tree]") {
   REQUIRE(tree.Find(3) == 3);
   REQUIRE(tree.Find(4) == 4);
   REQUIRE(tree.Find(5) == 5);
-  REQUIRE(tree.GetHeight() == 2);
+  REQUIRE(tree.GetHeight() == 3);
 }
 
 TEST_CASE("Fuzzy insertion tests, 64 elements", "[avl_tree]") {
@@ -185,7 +196,7 @@ TEST_CASE("Fuzzy insertion tests, 1000 elements", "[avl_tree]") {
     for (i32 i = 0; i < kKeysNum; i++) {
       REQUIRE(tree.Find(i) == i);
     }
-    REQUIRE(tree.GetHeight() <= 11);
+    REQUIRE(tree.GetHeight() <= 12);
   }
 }
 
@@ -234,6 +245,90 @@ TEST_CASE("Can remove from a subtree with left and right children",
   REQUIRE(tree.Find(2) == 2);
   REQUIRE(tree.Find(4) == 4);
   REQUIRE(tree.GetNodesCount() == 4);
+}
+
+TEST_CASE("Test removal left left balance case", "[avl_tree]") {
+  AvlTree tree;
+  tree.Insert(4, 4);
+  tree.Insert(2, 2);
+  tree.Insert(6, 6);
+  tree.Insert(1, 1);
+  tree.Insert(3, 3);
+  tree.Insert(5, 5);
+  tree.Insert(0, 0);
+  REQUIRE(tree.GetHeight() == 4);
+  tree.Remove(5);
+  REQUIRE(tree.Find(5) == std::nullopt);
+  REQUIRE(tree.Find(0) == 0);
+  REQUIRE(tree.Find(1) == 1);
+  REQUIRE(tree.Find(2) == 2);
+  REQUIRE(tree.Find(3) == 3);
+  REQUIRE(tree.Find(4) == 4);
+  REQUIRE(tree.Find(6) == 6);
+  REQUIRE(tree.GetHeight() == 3);
+}
+
+TEST_CASE("Test removal right right balance case", "[avl_tree]") {
+  AvlTree tree;
+  tree.Insert(2, 2);
+  tree.Insert(1, 1);
+  tree.Insert(4, 4);
+  tree.Insert(0, 0);
+  tree.Insert(3, 3);
+  tree.Insert(5, 5);
+  tree.Insert(6, 6);
+  REQUIRE(tree.GetHeight() == 4);
+  tree.Remove(6);
+  REQUIRE(tree.Find(6) == std::nullopt);
+  REQUIRE(tree.Find(0) == 0);
+  REQUIRE(tree.Find(1) == 1);
+  REQUIRE(tree.Find(2) == 2);
+  REQUIRE(tree.Find(3) == 3);
+  REQUIRE(tree.Find(4) == 4);
+  REQUIRE(tree.Find(5) == 5);
+  REQUIRE(tree.GetHeight() == 3);
+}
+
+TEST_CASE("Test removal left right balance case", "[avl_tree]") {
+  AvlTree tree;
+  tree.Insert(4, 4);
+  tree.Insert(1, 1);
+  tree.Insert(5, 5);
+  tree.Insert(0, 0);
+  tree.Insert(3, 3);
+  tree.Insert(6, 6);
+  tree.Insert(2, 2);
+  REQUIRE(tree.GetHeight() == 4);
+  tree.Remove(6);
+  REQUIRE(tree.Find(6) == std::nullopt);
+  REQUIRE(tree.Find(0) == 0);
+  REQUIRE(tree.Find(1) == 1);
+  REQUIRE(tree.Find(2) == 2);
+  REQUIRE(tree.Find(3) == 3);
+  REQUIRE(tree.Find(4) == 4);
+  REQUIRE(tree.Find(5) == 5);
+  REQUIRE(tree.GetHeight() == 3);
+}
+
+TEST_CASE("Test removal right left balance case", "[avl_tree]") {
+  AvlTree tree;
+  tree.Insert(2, 2);
+  tree.Insert(1, 1);
+  tree.Insert(5, 5);
+  tree.Insert(0, 0);
+  tree.Insert(4, 4);
+  tree.Insert(6, 6);
+  tree.Insert(3, 3);
+  REQUIRE(tree.GetHeight() == 4);
+  tree.Remove(0);
+  REQUIRE(tree.Find(0) == std::nullopt);
+  REQUIRE(tree.Find(1) == 1);
+  REQUIRE(tree.Find(2) == 2);
+  REQUIRE(tree.Find(3) == 3);
+  REQUIRE(tree.Find(4) == 4);
+  REQUIRE(tree.Find(5) == 5);
+  REQUIRE(tree.Find(6) == 6);
+  REQUIRE(tree.GetHeight() == 3);
 }
 
 TEST_CASE("Can remove a node with a subtree of 2 children and 4 grandchildren",
