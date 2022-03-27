@@ -2,12 +2,9 @@
 
 using i32 = int;
 
-struct AvlTree {
-  using TKey = i32;
-  using TValue = i32;
-
+template <typename TKey, typename TValue> struct AvlTree {
   struct Node;
-  using NodePtr = Node*;
+  using NodePtr = Node *;
   static constexpr NodePtr kNullNode = nullptr;
 
   struct Node {
@@ -49,40 +46,50 @@ struct AvlTree {
   std::optional<TValue> Find(TKey k) const;
 };
 
-AvlTree::NodePtr AvlTree::NewNode() {
+template <typename TKey, typename TValue>
+AvlTree<TKey, TValue>::NodePtr AvlTree<TKey, TValue>::NewNode() {
   nodesCount_++;
   return new AvlTree::Node;
 }
 
-void AvlTree::DeleteNode(AvlTree::NodePtr ptr) {
+template <typename TKey, typename TValue>
+void AvlTree<TKey, TValue>::DeleteNode(NodePtr ptr) {
   nodesCount_--;
   delete ptr;
 }
 
-AvlTree::Node &AvlTree::NodeAt(AvlTree::NodePtr ptr) {
+template <typename TKey, typename TValue>
+AvlTree<TKey, TValue>::Node &AvlTree<TKey, TValue>::NodeAt(NodePtr ptr) {
   return *ptr;
 }
 
-AvlTree::Node const &AvlTree::NodeAt(AvlTree::NodePtr ptr) const {
+template <typename TKey, typename TValue>
+AvlTree<TKey, TValue>::Node const &
+AvlTree<TKey, TValue>::NodeAt(NodePtr ptr) const {
   return *ptr;
 }
 
-i32 AvlTree::GetNodesCount() const {
+template <typename TKey, typename TValue>
+i32 AvlTree<TKey, TValue>::GetNodesCount() const {
   return nodesCount_;
 }
 
-i32 AvlTree::GetBalance(NodePtr node) const {
+template <typename TKey, typename TValue>
+i32 AvlTree<TKey, TValue>::GetBalance(NodePtr node) const {
   return GetHeight(NodeAt(node).right) - GetHeight(NodeAt(node).left);
 }
 
-i32 AvlTree::GetHeight(NodePtr node) const {
+template <typename TKey, typename TValue>
+i32 AvlTree<TKey, TValue>::GetHeight(NodePtr node) const {
   if (node == kNullNode) {
     return 0;
   }
   return NodeAt(node).height;
 }
 
-AvlTree::NodePtr AvlTree::GetLeftermost(NodePtr root) {
+template <typename TKey, typename TValue>
+AvlTree<TKey, TValue>::NodePtr
+AvlTree<TKey, TValue>::GetLeftermost(NodePtr root) {
   NodePtr node = root;
   while (NodeAt(node).left) {
     node = NodeAt(node).left;
@@ -90,7 +97,8 @@ AvlTree::NodePtr AvlTree::GetLeftermost(NodePtr root) {
   return node;
 }
 
-AvlTree::NodePtr AvlTree::LeftRotate(NodePtr x) {
+template <typename TKey, typename TValue>
+AvlTree<TKey, TValue>::NodePtr AvlTree<TKey, TValue>::LeftRotate(NodePtr x) {
   NodePtr y = NodeAt(x).right;
   NodePtr T2 = NodeAt(y).left;
 
@@ -105,7 +113,8 @@ AvlTree::NodePtr AvlTree::LeftRotate(NodePtr x) {
   return y;
 }
 
-AvlTree::NodePtr AvlTree::RightRotate(NodePtr y) {
+template <typename TKey, typename TValue>
+AvlTree<TKey, TValue>::NodePtr AvlTree<TKey, TValue>::RightRotate(NodePtr y) {
   NodePtr x = NodeAt(y).left;
   NodePtr T2 = NodeAt(x).right;
 
@@ -120,7 +129,9 @@ AvlTree::NodePtr AvlTree::RightRotate(NodePtr y) {
   return x;
 }
 
-AvlTree::NodePtr AvlTree::SubtreeInsert(NodePtr root, TKey k, TValue v) {
+template <typename TKey, typename TValue>
+AvlTree<TKey, TValue>::NodePtr
+AvlTree<TKey, TValue>::SubtreeInsert(NodePtr root, TKey k, TValue v) {
   if (root == kNullNode) {
     NodePtr node = NewNode();
     NodeAt(node).key = k;
@@ -168,7 +179,9 @@ AvlTree::NodePtr AvlTree::SubtreeInsert(NodePtr root, TKey k, TValue v) {
   return root;
 }
 
-AvlTree::NodePtr AvlTree::SubtreeRemove(NodePtr root, TKey k) {
+template <typename TKey, typename TValue>
+AvlTree<TKey, TValue>::NodePtr
+AvlTree<TKey, TValue>::SubtreeRemove(NodePtr root, TKey k) {
   if (root == kNullNode) {
     return root;
   }
@@ -188,7 +201,8 @@ AvlTree::NodePtr AvlTree::SubtreeRemove(NodePtr root, TKey k) {
       NodeAt(newRoot).key = NodeAt(leftermost).key;
       NodeAt(newRoot).value = NodeAt(leftermost).value;
       NodeAt(newRoot).left = NodeAt(root).left;
-      NodeAt(newRoot).right = SubtreeRemove(NodeAt(root).right, NodeAt(leftermost).key);
+      NodeAt(newRoot).right =
+          SubtreeRemove(NodeAt(root).right, NodeAt(leftermost).key);
     }
     DeleteNode(root);
   }
@@ -196,7 +210,7 @@ AvlTree::NodePtr AvlTree::SubtreeRemove(NodePtr root, TKey k) {
     NodeAt(newRoot).height = 1 + max(GetHeight(NodeAt(newRoot).left),
                                      GetHeight(NodeAt(newRoot).right));
     i32 balance = GetBalance(newRoot);
-    
+
     // left left
     if (balance < -1 && GetBalance(NodeAt(newRoot).left) <= 0) {
       return RightRotate(newRoot);
@@ -208,7 +222,7 @@ AvlTree::NodePtr AvlTree::SubtreeRemove(NodePtr root, TKey k) {
     }
 
     // left right
-    if(balance < -1 && 0 < GetBalance(NodeAt(newRoot).left)) {
+    if (balance < -1 && 0 < GetBalance(NodeAt(newRoot).left)) {
       NodeAt(newRoot).left = LeftRotate(NodeAt(newRoot).left);
       return RightRotate(newRoot);
     }
@@ -223,13 +237,23 @@ AvlTree::NodePtr AvlTree::SubtreeRemove(NodePtr root, TKey k) {
   return newRoot;
 }
 
-i32 AvlTree::GetHeight() const { return GetHeight(root_); }
+template <typename TKey, typename TValue>
+i32 AvlTree<TKey, TValue>::GetHeight() const {
+  return GetHeight(root_);
+}
 
-void AvlTree::Insert(TKey k, TValue v) { root_ = SubtreeInsert(root_, k, v); }
+template <typename TKey, typename TValue>
+void AvlTree<TKey, TValue>::Insert(TKey k, TValue v) {
+  root_ = SubtreeInsert(root_, k, v);
+}
 
-void AvlTree::Remove(TKey k) { root_ = SubtreeRemove(root_, k); }
+template <typename TKey, typename TValue>
+void AvlTree<TKey, TValue>::Remove(TKey k) {
+  root_ = SubtreeRemove(root_, k);
+}
 
-std::optional<AvlTree::TValue> AvlTree::Find(TKey k) const {
+template <typename TKey, typename TValue>
+std::optional<TValue> AvlTree<TKey, TValue>::Find(TKey k) const {
   NodePtr currentNode = root_;
   while (currentNode != kNullNode) {
     if (k < NodeAt(currentNode).key) {

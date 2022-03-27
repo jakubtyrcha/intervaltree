@@ -5,7 +5,7 @@
 #include <random>
 
 TEST_CASE("Can read from empty tree and update the root", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   REQUIRE(tree.Find(0) == std::nullopt);
   tree.Insert(0, 1);
   REQUIRE(tree.Find(0) == 1);
@@ -13,7 +13,7 @@ TEST_CASE("Can read from empty tree and update the root", "[avl_tree]") {
 }
 
 TEST_CASE("Can get tree height", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   REQUIRE(tree.GetHeight() == 0);
   tree.Insert(1, 1);
   REQUIRE(tree.GetHeight() == 1);
@@ -25,7 +25,7 @@ TEST_CASE("Can get tree height", "[avl_tree]") {
 }
 
 TEST_CASE("Can insert 0, 1, 2", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(0, 0);
   tree.Insert(1, 1);
   tree.Insert(2, 2);
@@ -35,7 +35,7 @@ TEST_CASE("Can insert 0, 1, 2", "[avl_tree]") {
 }
 
 TEST_CASE("Can insert 2, 1, 0", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(2, 2);
   tree.Insert(1, 1);
   tree.Insert(0, 0);
@@ -45,7 +45,7 @@ TEST_CASE("Can insert 2, 1, 0", "[avl_tree]") {
 }
 
 TEST_CASE("Can insert 1, 0, 2", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(1, 1);
   tree.Insert(0, 0);
   tree.Insert(2, 2);
@@ -55,7 +55,7 @@ TEST_CASE("Can insert 1, 0, 2", "[avl_tree]") {
 }
 
 TEST_CASE("Can insert monotonically rising sequence", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(0, 0);
   tree.Insert(1, 1);
   tree.Insert(2, 2);
@@ -71,7 +71,7 @@ TEST_CASE("Can insert monotonically rising sequence", "[avl_tree]") {
 }
 
 TEST_CASE("Can insert monotonically falling sequence", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(5, 5);
   tree.Insert(4, 4);
   tree.Insert(3, 3);
@@ -87,7 +87,7 @@ TEST_CASE("Can insert monotonically falling sequence", "[avl_tree]") {
 }
 
 TEST_CASE("Test left left balance case", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(4, 4);
   tree.Insert(2, 2);
   tree.Insert(5, 5);
@@ -104,7 +104,7 @@ TEST_CASE("Test left left balance case", "[avl_tree]") {
 }
 
 TEST_CASE("Test right right balance case", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(1, 1);
   tree.Insert(3, 3);
   tree.Insert(0, 0);
@@ -121,7 +121,7 @@ TEST_CASE("Test right right balance case", "[avl_tree]") {
 }
 
 TEST_CASE("Test left right balance case", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(4, 4);
   tree.Insert(1, 1);
   tree.Insert(5, 5);
@@ -138,7 +138,7 @@ TEST_CASE("Test left right balance case", "[avl_tree]") {
 }
 
 TEST_CASE("Test right left balance case", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(1, 1);
   tree.Insert(0, 0);
   tree.Insert(4, 4);
@@ -166,7 +166,7 @@ TEST_CASE("Fuzzy insertion tests, 64 elements", "[avl_tree]") {
   const i32 kSequences = 8;
   for (i32 s = 0; s < kSequences; s++) {
     std::shuffle(keys.begin(), keys.end(), g);
-    AvlTree tree;
+    AvlTree<i32, i32> tree;
     for (i32 i = 0; i < kKeysNum; i++) {
       tree.Insert(keys[i], keys[i]);
     }
@@ -189,7 +189,7 @@ TEST_CASE("Fuzzy insertion tests, 1000 elements", "[avl_tree]") {
   const i32 kSequences = 4;
   for (i32 s = 0; s < kSequences; s++) {
     std::shuffle(keys.begin(), keys.end(), g);
-    AvlTree tree;
+    AvlTree<i32, i32> tree;
     for (i32 i = 0; i < kKeysNum; i++) {
       tree.Insert(keys[i], keys[i]);
     }
@@ -201,14 +201,14 @@ TEST_CASE("Fuzzy insertion tests, 1000 elements", "[avl_tree]") {
 }
 
 TEST_CASE("Can remove the last node", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(0, 0);
   tree.Remove(0);
   REQUIRE(tree.Find(0) == std::nullopt);
 }
 
 TEST_CASE("Can remove from a subtree with left child", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(2, 2);
   tree.Insert(1, 1);
   tree.Insert(3, 3);
@@ -220,7 +220,7 @@ TEST_CASE("Can remove from a subtree with left child", "[avl_tree]") {
 }
 
 TEST_CASE("Can remove from a subtree with right child", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(2, 2);
   tree.Insert(0, 0);
   tree.Insert(3, 3);
@@ -233,7 +233,7 @@ TEST_CASE("Can remove from a subtree with right child", "[avl_tree]") {
 
 TEST_CASE("Can remove from a subtree with left and right children",
           "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(1, 1);
   tree.Insert(0, 0);
   tree.Insert(3, 3);
@@ -248,7 +248,7 @@ TEST_CASE("Can remove from a subtree with left and right children",
 }
 
 TEST_CASE("Test removal left left balance case", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(4, 4);
   tree.Insert(2, 2);
   tree.Insert(6, 6);
@@ -269,7 +269,7 @@ TEST_CASE("Test removal left left balance case", "[avl_tree]") {
 }
 
 TEST_CASE("Test removal right right balance case", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(2, 2);
   tree.Insert(1, 1);
   tree.Insert(4, 4);
@@ -290,7 +290,7 @@ TEST_CASE("Test removal right right balance case", "[avl_tree]") {
 }
 
 TEST_CASE("Test removal left right balance case", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(4, 4);
   tree.Insert(1, 1);
   tree.Insert(5, 5);
@@ -311,7 +311,7 @@ TEST_CASE("Test removal left right balance case", "[avl_tree]") {
 }
 
 TEST_CASE("Test removal right left balance case", "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(2, 2);
   tree.Insert(1, 1);
   tree.Insert(5, 5);
@@ -333,7 +333,7 @@ TEST_CASE("Test removal right left balance case", "[avl_tree]") {
 
 TEST_CASE("Can remove a node with a subtree of 2 children and 4 grandchildren",
           "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   tree.Insert(3, 3);
   tree.Insert(2, 2);
   tree.Insert(7, 7);
@@ -357,7 +357,7 @@ TEST_CASE("Can remove a node with a subtree of 2 children and 4 grandchildren",
 
 TEST_CASE("Test insertion and removal of monotonically rising sequences",
           "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   constexpr i32 kKeysNum = 64;
   for (i32 i = 0; i < kKeysNum; i++) {
     tree.Insert(i, i);
@@ -373,7 +373,7 @@ TEST_CASE("Test insertion and removal of monotonically rising sequences",
 TEST_CASE("Test insertion of a monotonically rising sequence and removal of"
           "a monotonically falling sequence",
           "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   constexpr i32 kKeysNum = 64;
   for (i32 i = 0; i < kKeysNum; i++) {
     tree.Insert(i, i);
@@ -388,7 +388,7 @@ TEST_CASE("Test insertion of a monotonically rising sequence and removal of"
 
 TEST_CASE("Test insertion and removal of monotonically falling sequences",
           "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   constexpr i32 kKeysNum = 64;
   for (i32 i = kKeysNum - 1; i >= 0; i--) {
     tree.Insert(i, i);
@@ -404,7 +404,7 @@ TEST_CASE("Test insertion and removal of monotonically falling sequences",
 TEST_CASE("Test insertion of a monotonically falling sequence and removal of "
           "a monotonically rising sequence",
           "[avl_tree]") {
-  AvlTree tree;
+  AvlTree<i32, i32> tree;
   constexpr i32 kKeysNum = 64;
   for (i32 i = kKeysNum - 1; i >= 0; i--) {
     tree.Insert(i, i);
@@ -429,7 +429,7 @@ TEST_CASE("Fuzzy removal test, 64 elements", "[avl_tree]") {
   const i32 kSequences = 8;
   for (i32 s = 0; s < kSequences; s++) {
     std::shuffle(keys.begin(), keys.end(), g);
-    AvlTree tree;
+    AvlTree<i32, i32> tree;
     for (i32 i = 0; i < kKeysNum; i++) {
       tree.Insert(keys[i], keys[i]);
     }
@@ -455,7 +455,7 @@ TEST_CASE("Fuzzy removal test, 1000 elements", "[avl_tree]") {
   const i32 kSequences = 4;
   for (i32 s = 0; s < kSequences; s++) {
     std::shuffle(keys.begin(), keys.end(), g);
-    AvlTree tree;
+    AvlTree<i32, i32> tree;
     for (i32 i = 0; i < kKeysNum; i++) {
       tree.Insert(keys[i], keys[i]);
     }
