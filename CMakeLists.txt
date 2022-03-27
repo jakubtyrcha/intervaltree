@@ -1,9 +1,5 @@
 project(IntervalTree)
 
-add_executable(main main.cpp)
-
-target_compile_features(main PUBLIC cxx_std_20)
-
 Include(FetchContent)
 
 FetchContent_Declare(
@@ -11,9 +7,8 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/catchorg/Catch2.git
   GIT_TAG        v3.0.0-preview3
 )
-
 FetchContent_MakeAvailable(Catch2)
 
-add_executable(tests test.cpp)
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
-target_compile_features(tests PUBLIC cxx_std_20)
+add_executable(Tests AvlTreeTests.cpp)
+target_link_libraries(Tests PRIVATE Catch2::Catch2WithMain)
+target_compile_features(Tests PUBLIC cxx_std_20)
