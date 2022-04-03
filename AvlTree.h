@@ -2,6 +2,7 @@
 
 using i32 = int;
 
+// TODO: destructor should free the nodes
 template <typename TKey, typename TValue> struct AvlTree {
   struct Node;
   using NodePtr = Node *;
