@@ -21,10 +21,15 @@ struct Interval {
     }
 };
 
-// adapter methods
+// test adapter methods
 template <typename T, typename V>
 void TreeInsert(T &container, Interval interval, V && value) {
   container.Insert(interval, value);
+}
+
+template <typename T, typename V>
+void TreeRemove(T &container, Interval interval, V && value) {
+  container.Remove(interval);
 }
 
 template <typename V, typename T>
@@ -33,6 +38,8 @@ std::unordered_set<V> TreeQuery(T &container, f32 point) {
   container.CollectQueryValues(point, values);
   return std::unordered_set<V>{values.begin(), values.end()};
 }
+
+//
 
 TEST_CASE("Will look for value in the left subtree", "[interval_multitree]") {
   IntervalMultiTree<Interval, i32> itree;
@@ -88,7 +95,7 @@ TEST_CASE("Will look for value in the right subtree", "[interval_multitree]") {
   }
 }
 
-TEST_CASE("Will handle nested intervals", "[interval_multitree]") {
+TEST_CASE("Can query nested intervals", "[interval_multitree]") {
   IntervalMultiTree<Interval, i32> itree;
   for(i32 i=0; i<20; i++) {
     TreeInsert(itree, Interval{static_cast<f32>(i), 20.f}, i);
@@ -105,7 +112,7 @@ TEST_CASE("Will handle nested intervals", "[interval_multitree]") {
   }
 }
 
-TEST_CASE("Will handle disjoint intervals", "[interval_multitree]") {
+TEST_CASE("Can query disjoint intervals", "[interval_multitree]") {
   IntervalMultiTree<Interval, i32> itree;
   for (i32 i = 0; i < 20; i++) {
     TreeInsert(itree, Interval{static_cast<f32>(i), static_cast<f32>(i + 1)},
@@ -121,5 +128,25 @@ TEST_CASE("Will handle disjoint intervals", "[interval_multitree]") {
         REQUIRE(!queryResults.contains(j));
       }
     }
+  }
+}
+
+TEST_CASE("Can delete root and keep the tree valid", "[interval_multitree]") {
+  IntervalMultiTree<Interval, i32> itree;
+  TreeInsert(itree, Interval{0.f, 1.f}, 0);
+  TreeInsert(itree, Interval{1.f, 2.f}, 1);
+  TreeInsert(itree, Interval{-1.f, 0.f}, -1);
+  TreeRemove(itree, Interval{0.f, 1.f}, 0);
+  {
+    auto queryResults = TreeQuery<i32>(itree, 0.f);
+    REQUIRE(!queryResults.contains(0));
+  }
+  {
+    auto queryResults = TreeQuery<i32>(itree, -1.f);
+    REQUIRE(queryResults.contains(-1));
+  }
+  {
+    auto queryResults = TreeQuery<i32>(itree, 1.f);
+    REQUIRE(queryResults.contains(1));
   }
 }

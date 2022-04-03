@@ -1,7 +1,6 @@
 #include <optional>
 #include <vector>
 
-
 using i32 = int;
 
 template <typename TInterval, typename TValue> struct IntervalMultiTree {
@@ -21,8 +20,7 @@ template <typename TInterval, typename TValue> struct IntervalMultiTree {
   };
   NodePtr root_{kNullNode};
 
-  template<typename T>
-  T max(T a, T b) { return (a > b) ? a : b; }
+  template <typename T> T max(T a, T b) { return (a > b) ? a : b; }
 
   // node allocation policy
   i32 nodesCount_ = 0;
@@ -40,6 +38,13 @@ template <typename TInterval, typename TValue> struct IntervalMultiTree {
   i32 GetBalance(NodePtr node) const {
     return GetHeight(NodeAt(node).right) - GetHeight(NodeAt(node).left);
   }
+  NodePtr GetLeftermost(NodePtr root) const {
+    NodePtr node = root;
+    while (NodeAt(node).left) {
+      node = NodeAt(node).left;
+    }
+    return node;
+  }
   void AdjustSubtreeMax(NodePtr root) {
     TIntervalEdge subtreeEnd = NodeAt(root).nodeInterval.end;
     if (NodeAt(root).left != kNullNode) {
@@ -55,6 +60,7 @@ template <typename TInterval, typename TValue> struct IntervalMultiTree {
   NodePtr RightRotate(NodePtr node);
 
   NodePtr SubtreeInsert(NodePtr, TInterval i, TValue v);
+  NodePtr SubtreeRemove(NodePtr, TInterval i);
   std::optional<NodePtr> Find(TInterval i);
   void SubtreeCollectQueryValues(NodePtr, TIntervalEdge point,
                                  std::vector<TValue> &outAccumulator);
@@ -62,6 +68,7 @@ template <typename TInterval, typename TValue> struct IntervalMultiTree {
   // operations
   i32 GetHeight() const;
   void Insert(TInterval k, TValue v);
+  void Remove(TInterval k);
   void CollectQueryValues(TIntervalEdge point,
                           std::vector<TValue> &outAccumulator);
 };
@@ -97,7 +104,8 @@ i32 IntervalMultiTree<TInterval, TValue>::GetNodesCount() const {
 }
 
 template <typename TInterval, typename TValue>
-IntervalMultiTree<TInterval, TValue>::NodePtr IntervalMultiTree<TInterval, TValue>::LeftRotate(NodePtr x) {
+IntervalMultiTree<TInterval, TValue>::NodePtr
+IntervalMultiTree<TInterval, TValue>::LeftRotate(NodePtr x) {
   NodePtr y = NodeAt(x).right;
   NodePtr T2 = NodeAt(y).left;
 
@@ -116,7 +124,8 @@ IntervalMultiTree<TInterval, TValue>::NodePtr IntervalMultiTree<TInterval, TValu
 }
 
 template <typename TInterval, typename TValue>
-IntervalMultiTree<TInterval, TValue>::NodePtr IntervalMultiTree<TInterval, TValue>::RightRotate(NodePtr y) {
+IntervalMultiTree<TInterval, TValue>::NodePtr
+IntervalMultiTree<TInterval, TValue>::RightRotate(NodePtr y) {
   NodePtr x = NodeAt(y).left;
   NodePtr T2 = NodeAt(x).right;
 
@@ -136,7 +145,8 @@ IntervalMultiTree<TInterval, TValue>::NodePtr IntervalMultiTree<TInterval, TValu
 
 template <typename TInterval, typename TValue>
 IntervalMultiTree<TInterval, TValue>::NodePtr
-IntervalMultiTree<TInterval, TValue>::SubtreeInsert(NodePtr root, TInterval i, TValue v) {
+IntervalMultiTree<TInterval, TValue>::SubtreeInsert(NodePtr root, TInterval i,
+                                                    TValue v) {
   if (root == kNullNode) {
     NodePtr node = NewNode();
     NodeAt(node).nodeInterval = i;
@@ -159,7 +169,7 @@ IntervalMultiTree<TInterval, TValue>::SubtreeInsert(NodePtr root, TInterval i, T
   NodePtr left = NodeAt(root).left;
   NodePtr right = NodeAt(root).right;
   NodeAt(root).height = 1 + max(GetHeight(left), GetHeight(right));
-  
+
   AdjustSubtreeMax(root);
 
   i32 balance = GetBalance(root);
@@ -190,6 +200,65 @@ IntervalMultiTree<TInterval, TValue>::SubtreeInsert(NodePtr root, TInterval i, T
 }
 
 template <typename TInterval, typename TValue>
+IntervalMultiTree<TInterval, TValue>::NodePtr
+IntervalMultiTree<TInterval, TValue>::SubtreeRemove(NodePtr root, TInterval i) {
+  if (root == kNullNode) {
+    return root;
+  }
+  NodePtr newRoot = root;
+  if (i.begin < NodeAt(root).nodeInterval.begin) {
+    NodeAt(root).left = SubtreeRemove(NodeAt(root).left, i);
+  } else if (NodeAt(root).nodeInterval.begin < i.begin) {
+    NodeAt(root).right = SubtreeRemove(NodeAt(root).right, i);
+  } else {
+    if (NodeAt(root).left == kNullNode) {
+      newRoot = NodeAt(root).right;
+    } else if (NodeAt(root).right == kNullNode) {
+      newRoot = NodeAt(root).left;
+    } else {
+      NodePtr leftermost = GetLeftermost(NodeAt(root).right);
+      newRoot = NewNode();
+      NodeAt(newRoot).nodeInterval = NodeAt(leftermost).nodeInterval;
+      NodeAt(newRoot).values = NodeAt(leftermost).values; // TODO: move
+      NodeAt(newRoot).left = NodeAt(root).left;
+      NodeAt(newRoot).right =
+          SubtreeRemove(NodeAt(root).right, NodeAt(leftermost).nodeInterval);
+    }
+    DeleteNode(root);
+  }
+  if (newRoot != kNullNode) {
+    NodeAt(newRoot).height = 1 + max(GetHeight(NodeAt(newRoot).left),
+                                     GetHeight(NodeAt(newRoot).right));
+    i32 balance = GetBalance(newRoot);
+    AdjustSubtreeMax(newRoot);
+
+    // left left
+    if (balance < -1 && GetBalance(NodeAt(newRoot).left) <= 0) {
+      return RightRotate(newRoot);
+    }
+
+    // right right
+    if (1 < balance && 0 <= GetBalance(NodeAt(newRoot).right)) {
+      return LeftRotate(newRoot);
+    }
+
+    // left right
+    if (balance < -1 && 0 < GetBalance(NodeAt(newRoot).left)) {
+      NodeAt(newRoot).left = LeftRotate(NodeAt(newRoot).left);
+      return RightRotate(newRoot);
+    }
+
+    // right left
+    if (1 < balance && GetBalance(NodeAt(newRoot).right) < 0) {
+      NodeAt(newRoot).right = RightRotate(NodeAt(newRoot).right);
+      return LeftRotate(newRoot);
+    }
+  }
+
+  return newRoot;
+}
+
+template <typename TInterval, typename TValue>
 std::optional<typename IntervalMultiTree<TInterval, TValue>::NodePtr>
 IntervalMultiTree<TInterval, TValue>::Find(TInterval i) {
   NodePtr currentNode = root_;
@@ -211,14 +280,19 @@ void IntervalMultiTree<TInterval, TValue>::Insert(TInterval i, TValue v) {
 }
 
 template <typename TInterval, typename TValue>
+void IntervalMultiTree<TInterval, TValue>::Remove(TInterval i) {
+  root_ = SubtreeRemove(root_, i);
+}
+
+template <typename TInterval, typename TValue>
 void IntervalMultiTree<TInterval, TValue>::SubtreeCollectQueryValues(
     NodePtr root, TIntervalEdge point, std::vector<TValue> &outAccumulator) {
   if (root == kNullNode) {
     return;
   }
 
-  if(NodeAt(root).nodeInterval.Contains(point)) {
-    for(auto& v: NodeAt(root).values) {
+  if (NodeAt(root).nodeInterval.Contains(point)) {
+    for (auto &v : NodeAt(root).values) {
       outAccumulator.push_back(v);
     }
   }
