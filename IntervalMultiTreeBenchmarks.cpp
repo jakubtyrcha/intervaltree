@@ -58,7 +58,7 @@ std::vector<V> TreeQuery(T &container, E point) {
   return values;
 }
 
-TEST_CASE("Interval multitree benchmark", "[interval_multitree]") {
+TEST_CASE("Interval multitree short intervals benchmark", "[interval_multitree]") {
   BruteforceIntervalTree<Interval, int> reference;
   IntervalMultiTree<Interval, int> itree;
 
@@ -77,7 +77,59 @@ TEST_CASE("Interval multitree benchmark", "[interval_multitree]") {
 
   std::mt19937 g{0};
   for (i32 i = 0; i < kEntries; i++) {
-    f32 len = std::gamma_distribution<f32>{2.f, 2.f}(g);
+    f32 len = std::gamma_distribution<f32>{2.f, 1.f}(g);
+    len = std::max(len, 0.01f);
+
+    f32 start =
+        std::uniform_real_distribution<f32>{kRangeFrom, kRangeTo - 5.f}(g);
+    f32 end = std::min(kRangeTo, start + len);
+    TreeInsert(reference, Interval{start, end}, ctr);
+    TreeInsert(itree, Interval{start, end}, ctr);
+    ctr++;
+  }
+
+  BENCHMARK_ADVANCED("brute-force list")
+  (Catch::Benchmark::Chronometer meter) {
+    meter.measure([&reference, kRangeFrom, kRangeTo] {
+      size_t ctr = 0;
+      for (f32 x = kRangeFrom; x < kRangeTo; x += 1.f) {
+        ctr += TreeQuery<int>(reference, x).size();
+      }
+      return ctr;
+    });
+  };
+
+  BENCHMARK_ADVANCED("interval tree")(Catch::Benchmark::Chronometer meter) {
+    meter.measure([&itree, kRangeFrom, kRangeTo] {
+      size_t ctr = 0;
+      for (f32 x = kRangeFrom; x < kRangeTo; x += 1.f) {
+        ctr += TreeQuery<int>(itree, x).size();
+      }
+      return ctr;
+    });
+  };
+}
+
+TEST_CASE("Interval multitree long intervals benchmark", "[interval_multitree]") {
+  BruteforceIntervalTree<Interval, int> reference;
+  IntervalMultiTree<Interval, int> itree;
+
+  // Build trees
+
+  constexpr f32 kRangeFrom = 0.f;
+  constexpr f32 kRangeTo = 10000.f;
+  constexpr i32 kEntries = 10000;
+
+  int ctr = 0;
+  for (f32 x = kRangeFrom; x < kRangeTo; x += 100.f) {
+    TreeInsert(reference, Interval{x, x + 100.f}, ctr);
+    TreeInsert(itree, Interval{x, x + 100.f}, ctr);
+    ctr++;
+  }
+
+  std::mt19937 g{0};
+  for (i32 i = 0; i < kEntries; i++) {
+    f32 len = std::gamma_distribution<f32>{2.f, 10.f}(g);
     len = std::max(len, 0.01f);
 
     f32 start =

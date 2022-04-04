@@ -225,7 +225,7 @@ TEST_CASE("Will balance removal right left case", "[interval_multitree]") {
   REQUIRE(itree.GetHeight() == 3);
 }
 
-TEST_CASE("Will balance after removing a node with a subtree of 2 children and 4 grandchildren",
+TEST_CASE("Will rebalance after removing a node with a subtree of 2 children and 4 grandchildren",
           "[interval_multitree]") {
   IntervalMultiTree<IntInterval, i32> itree;
   TreeInsert(itree, IntInterval{3, 11}, 3);
