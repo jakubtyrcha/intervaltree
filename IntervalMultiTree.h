@@ -1,8 +1,8 @@
 #include <optional>
 #include <vector>
+#include <map>
 
 using i32 = int;
-
 template <typename TInterval, typename TValue> struct IntervalMultiTree {
   using TIntervalEdge = decltype(TInterval::end);
 
@@ -14,9 +14,14 @@ template <typename TInterval, typename TValue> struct IntervalMultiTree {
     NodePtr left = kNullNode;
     NodePtr right = kNullNode;
     i32 height = 0;
-    TInterval nodeInterval;
-    TIntervalEdge subtreeEnd;
-    std::vector<TValue> values;
+    TIntervalEdge key{};
+    TIntervalEdge subtreeLargestIntervalEnd{};
+    std::map<TIntervalEdge, std::vector<TValue>> intervalEndToValuesMap;
+
+    TInterval GetNodeInterval() const {
+      const TIntervalEdge lastIntervalEnd = (--intervalEndToValuesMap.end())->first;
+      return {key, lastIntervalEnd};
+    }
   };
   NodePtr root_{kNullNode};
 
@@ -46,14 +51,14 @@ template <typename TInterval, typename TValue> struct IntervalMultiTree {
     return node;
   }
   void AdjustSubtreeMax(NodePtr root) {
-    TIntervalEdge subtreeEnd = NodeAt(root).nodeInterval.end;
+    TIntervalEdge tmpSubtreeEnd = NodeAt(root).GetNodeInterval().end;
     if (NodeAt(root).left != kNullNode) {
-      subtreeEnd = max(subtreeEnd, NodeAt(NodeAt(root).left).subtreeEnd);
+      tmpSubtreeEnd = max(tmpSubtreeEnd, NodeAt(NodeAt(root).left).subtreeLargestIntervalEnd);
     }
     if (NodeAt(root).right != kNullNode) {
-      subtreeEnd = max(subtreeEnd, NodeAt(NodeAt(root).right).subtreeEnd);
+      tmpSubtreeEnd = max(tmpSubtreeEnd, NodeAt(NodeAt(root).right).subtreeLargestIntervalEnd);
     }
-    NodeAt(root).subtreeEnd = subtreeEnd;
+    NodeAt(root).subtreeLargestIntervalEnd = tmpSubtreeEnd;
   }
 
   NodePtr LeftRotate(NodePtr node);
@@ -149,20 +154,29 @@ IntervalMultiTree<TInterval, TValue>::SubtreeInsert(NodePtr root, TInterval i,
                                                     TValue v) {
   if (root == kNullNode) {
     NodePtr node = NewNode();
-    NodeAt(node).nodeInterval = i;
-    NodeAt(node).subtreeEnd = i.end;
+    NodeAt(node).key = i.begin;
     NodeAt(node).height = 1;
-    NodeAt(node).values.emplace_back(v);
+    NodeAt(node).subtreeLargestIntervalEnd = i.end;
+    // calls fill constructor on the vector
+    NodeAt(node).intervalEndToValuesMap.emplace(i.end, 0);
+    NodeAt(node).intervalEndToValuesMap[i.end].emplace_back(v);
     return node;
   }
 
-  if (i.begin < NodeAt(root).nodeInterval.begin) {
+  if (i.begin < NodeAt(root).key) {
     NodeAt(root).left = SubtreeInsert(NodeAt(root).left, i, v);
-  } else if (NodeAt(root).nodeInterval.begin < i.begin) {
+  } else if (NodeAt(root).key < i.begin) {
     NodeAt(root).right = SubtreeInsert(NodeAt(root).right, i, v);
   } else {
     // modify interval and subtree
-    NodeAt(root).values.emplace_back(v);
+    auto iter = NodeAt(root).intervalEndToValuesMap.find(i.end);
+    if(iter == NodeAt(root).intervalEndToValuesMap.end()) {
+      NodeAt(root).intervalEndToValuesMap.emplace(i.end, 0);
+      NodeAt(root).intervalEndToValuesMap[i.end].emplace_back(v);
+    }
+    else {
+      iter->second.emplace_back(v);
+    }
     return root;
   }
 
@@ -175,23 +189,23 @@ IntervalMultiTree<TInterval, TValue>::SubtreeInsert(NodePtr root, TInterval i,
   i32 balance = GetBalance(root);
 
   // left left
-  if (balance < -1 && i.begin < NodeAt(NodeAt(root).left).nodeInterval.begin) {
+  if (balance < -1 && i.begin < NodeAt(NodeAt(root).left).key) {
     return RightRotate(root);
   }
 
   // right right
-  if (1 < balance && NodeAt(NodeAt(root).right).nodeInterval.begin < i.begin) {
+  if (1 < balance && NodeAt(NodeAt(root).right).key < i.begin) {
     return LeftRotate(root);
   }
 
   // left right
-  if (balance < -1 && NodeAt(NodeAt(root).left).nodeInterval.begin < i.begin) {
+  if (balance < -1 && NodeAt(NodeAt(root).left).key < i.begin) {
     NodeAt(root).left = LeftRotate(NodeAt(root).left);
     return RightRotate(root);
   }
 
   // right left
-  if (1 < balance && i.begin < NodeAt(NodeAt(root).right).nodeInterval.begin) {
+  if (1 < balance && i.begin < NodeAt(NodeAt(root).right).key) {
     NodeAt(root).right = RightRotate(NodeAt(root).right);
     return LeftRotate(root);
   }
@@ -206,11 +220,13 @@ IntervalMultiTree<TInterval, TValue>::SubtreeRemove(NodePtr root, TInterval i) {
     return root;
   }
   NodePtr newRoot = root;
-  if (i.begin < NodeAt(root).nodeInterval.begin) {
+  if (i.begin < NodeAt(root).key) {
     NodeAt(root).left = SubtreeRemove(NodeAt(root).left, i);
-  } else if (NodeAt(root).nodeInterval.begin < i.begin) {
+  } else if (NodeAt(root).key < i.begin) {
     NodeAt(root).right = SubtreeRemove(NodeAt(root).right, i);
   } else {
+    //NodeAt(root).intervalEndToValuesMap.find(i)
+
     if (NodeAt(root).left == kNullNode) {
       newRoot = NodeAt(root).right;
     } else if (NodeAt(root).right == kNullNode) {
@@ -218,11 +234,10 @@ IntervalMultiTree<TInterval, TValue>::SubtreeRemove(NodePtr root, TInterval i) {
     } else {
       NodePtr leftermost = GetLeftermost(NodeAt(root).right);
       newRoot = NewNode();
-      NodeAt(newRoot).nodeInterval = NodeAt(leftermost).nodeInterval;
-      NodeAt(newRoot).values = NodeAt(leftermost).values; // TODO: move
-      NodeAt(newRoot).left = NodeAt(root).left;
+      NodeAt(newRoot).key = NodeAt(leftermost).key;
+      NodeAt(newRoot).intervalEndToValuesMap = std::move(NodeAt(root).intervalEndToValuesMap);
       NodeAt(newRoot).right =
-          SubtreeRemove(NodeAt(root).right, NodeAt(leftermost).nodeInterval);
+          SubtreeRemove(NodeAt(root).right, NodeAt(leftermost).key);
     }
     DeleteNode(root);
   }
@@ -291,18 +306,22 @@ void IntervalMultiTree<TInterval, TValue>::SubtreeCollectQueryValues(
     return;
   }
 
-  if (NodeAt(root).nodeInterval.Contains(point)) {
-    for (auto &v : NodeAt(root).values) {
-      outAccumulator.push_back(v);
+  if (NodeAt(root).key <= point) {
+    auto &map = NodeAt(root).intervalEndToValuesMap;
+    for (auto iter = map.upper_bound(point); iter != map.end(); ++iter) {
+      if (iter->first <= point) {
+        break;
+      }
+      outAccumulator.insert(outAccumulator.end(), iter->second.begin(), iter->second.end());
     }
   }
 
-  if (point < NodeAt(root).subtreeEnd) {
+  if (point < NodeAt(root).subtreeLargestIntervalEnd) {
     SubtreeCollectQueryValues(NodeAt(root).left, point, outAccumulator);
   }
 
-  if (NodeAt(root).nodeInterval.begin < point &&
-      point < NodeAt(root).subtreeEnd) {
+  if (NodeAt(root).key < point &&
+      point < NodeAt(root).subtreeLargestIntervalEnd) {
     SubtreeCollectQueryValues(NodeAt(root).right, point, outAccumulator);
   }
 }
