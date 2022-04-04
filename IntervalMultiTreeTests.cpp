@@ -24,7 +24,7 @@ struct IntInterval {
   i32 begin;
   i32 end;
 
-  bool operator==(Interval other) const {
+  bool operator==(IntInterval other) const {
     return begin == other.begin && end == other.end;
   }
 
@@ -369,20 +369,6 @@ TEST_CASE("Timeline test", "[interval_multitree]") {
   }
 }
 
-// TEST_CASE("Pattern test 0", "[interval_multitree]") {
-//   IntervalMultiTree<IntInterval, int> itree;
-//   TreeInsert(itree, IntInterval{0, 100}, 0);
-//   for (i32 i = 0; i < 16; i++) {
-//     TreeInsert(itree, IntInterval{0, i + 1}, i + 1);
-//   }
-//   for (i32 i = 0; i < 16; i++) {
-//     TreeInsert(itree, IntInterval{i, 16}, i + 1 + 16);
-//   }
-//   for(i32 i=0; i<16; i++) {
-//     REQUIRE(TreeQuery<int>(itree, i).size() == 1 + 16 + 1);
-//   }
-// }
-
 template<typename I, typename V>
 struct BruteforceIntervalTree {
   std::vector<std::pair<I, V>> intervals;
@@ -394,7 +380,7 @@ struct BruteforceIntervalTree {
 
   template<typename T>
   void Remove(I i, T && v) {
-    auto iter = intervals.find(intervals.begin(), intervals.end(), std::make_pair(i, v));
+    auto iter = std::find(intervals.begin(), intervals.end(), std::make_pair(i, v));
     if(iter != intervals.end()) {
       intervals.erase(iter);
     }
@@ -409,33 +395,45 @@ struct BruteforceIntervalTree {
   }
 };
 
-TEST_CASE("Fuzzy", "[interval_multitree]") {
+TEST_CASE("Fuzzy interval insertion and deletion", "[interval_multitree]") {
   BruteforceIntervalTree<IntInterval, int> reference;
   IntervalMultiTree<IntInterval, int> itree;
 
-  TreeInsert(reference, IntInterval{0, 1}, 0);
-  TreeInsert(itree, IntInterval{0, 1}, 0);
-
-  REQUIRE(TreeQuery<int>(reference, 0) == TreeQuery<int>(itree, 0));
-
+  constexpr i32 kRounds = 4;
   constexpr i32 kRangeFrom = 0;
   constexpr i32 kRangeTo = 100;
-  constexpr i32 kEntries = 10000;
+  constexpr i32 kEntries = 1000;
 
   std::mt19937 g{0};
-  for (i32 i = 0; i < kEntries; i++) {
-    auto a = std::uniform_int_distribution<>{kRangeFrom, kRangeTo}(g);
-    auto b = std::uniform_int_distribution<>{kRangeFrom, kRangeTo}(g);
-    if(a == b) {
-      i--;
-      continue;
+  for (i32 r = 0; r < kRounds; r++) {
+    for (i32 i = 0; i < kEntries; i++) {
+      auto a = std::uniform_int_distribution<>{kRangeFrom, kRangeTo}(g);
+      auto b = std::uniform_int_distribution<>{kRangeFrom, kRangeTo}(g);
+      if (a == b) {
+        i--;
+        continue;
+      }
+      auto interval = IntInterval{std::min(a, b), std::max(a, b)};
+      TreeInsert(reference, interval, i);
+      TreeInsert(itree, interval, i);
     }
-    auto interval = IntInterval{std::min(a, b), std::max(a, b)};
-    TreeInsert(reference, interval, i);
-    TreeInsert(itree, interval, i);
-  }
 
-  for(i32 i=kRangeFrom; i<kEntries; i++) {
-    REQUIRE(TreeQuery<int>(reference, i) == TreeQuery<int>(itree, i));
+    for (i32 i = kRangeFrom; i < kEntries; i++) {
+      REQUIRE(TreeQuery<int>(reference, i) == TreeQuery<int>(itree, i));
+    }
+
+    constexpr i32 kEntriesToRemove = 200;
+    for (i32 i = 0; i < kEntries; i++) {
+      auto index = std::uniform_int_distribution<>{
+          0, static_cast<int>(reference.intervals.size() - 1)}(g);
+      TreeRemove(itree, reference.intervals[index].first,
+                 reference.intervals[index].second);
+      TreeRemove(reference, reference.intervals[index].first,
+                 reference.intervals[index].second);
+    }
+
+    for (i32 i = kRangeFrom; i < kEntries; i++) {
+      REQUIRE(TreeQuery<int>(reference, i) == TreeQuery<int>(itree, i));
+    }
   }
 }
