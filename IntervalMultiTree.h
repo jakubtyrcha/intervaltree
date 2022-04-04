@@ -69,8 +69,28 @@ template <typename TInterval, typename TValue> struct IntervalMultiTree {
   std::optional<NodePtr> Find(TInterval i);
   void SubtreeCollectQueryValues(NodePtr, TIntervalEdge point,
                                  std::vector<TValue> &outAccumulator);
+  void ClearSubtree(NodePtr root) {
+    if(root == kNullNode) {
+      return;
+    }
+
+    ClearSubtree(NodeAt(root).left);
+    NodeAt(root).left = kNullNode;
+    ClearSubtree(NodeAt(root).right);
+    NodeAt(root).right = kNullNode;
+    DeleteNode(root);
+  }
+
+  //
+  ~IntervalMultiTree() {
+    Clear();
+  }
 
   // operations
+  void Clear() {
+    ClearSubtree(root_);
+    root_ = kNullNode;
+  }
   i32 GetHeight() const;
   void Insert(TInterval k, TValue v);
   void Remove(TInterval k, TValue v);
