@@ -197,6 +197,7 @@ IntervalMultiTree<TInterval, TValue>::SubtreeInsert(NodePtr root, TInterval i,
     else {
       iter->second.emplace_back(v);
     }
+    AdjustSubtreeMax(root);
     return root;
   }
 
@@ -250,13 +251,17 @@ IntervalMultiTree<TInterval, TValue>::SubtreeRemove(NodePtr root, TInterval i, T
     if (iter != NodeAt(root).intervalEndToValuesMap.end()) {
       auto findIter = std::find(iter->second.begin(), iter->second.end(), v);
       if (findIter == iter->second.end()) {
-        // can't find the value to remove, return
+        // can't find the value to remove, noop
         return root;
       }
       iter->second.erase(findIter);
       if (iter->second.size() > 0) {
         return root;
       }
+    }
+    // can't find the interval to remove, noop
+    if(NodeAt(root).intervalEndToValuesMap.size()) {
+      return root;
     }
 
     if (NodeAt(root).left == kNullNode) {
