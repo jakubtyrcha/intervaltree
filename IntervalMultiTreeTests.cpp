@@ -225,6 +225,31 @@ TEST_CASE("Will balance removal right left case", "[interval_multitree]") {
   REQUIRE(itree.GetHeight() == 3);
 }
 
+TEST_CASE("Will balance after removing a node with a subtree of 2 children and 4 grandchildren",
+          "[interval_multitree]") {
+  IntervalMultiTree<IntInterval, i32> itree;
+  TreeInsert(itree, IntInterval{3, 11}, 3);
+  TreeInsert(itree, IntInterval{2, 11}, 2);
+  TreeInsert(itree, IntInterval{7, 11}, 7);
+  TreeInsert(itree, IntInterval{0, 11}, 0);
+  TreeInsert(itree, IntInterval{1, 11}, 1);
+  TreeInsert(itree, IntInterval{6, 11}, 6);
+  TreeInsert(itree, IntInterval{9, 11}, 9);
+  TreeInsert(itree, IntInterval{4, 11}, 4);
+  TreeInsert(itree, IntInterval{5, 11}, 5);
+  TreeInsert(itree, IntInterval{8, 11}, 8);
+  TreeInsert(itree, IntInterval{10, 11}, 10);
+  TreeRemove(itree, IntInterval{7, 11}, 7);
+
+  REQUIRE(!TreeQuery<int>(itree, 7).contains(7));
+  for (i32 i = 0; i < 10; i++) {
+    if (i != 7) {
+      REQUIRE(TreeQuery<int>(itree, i).contains(i));
+    }
+  }
+  REQUIRE(itree.GetNodesCount() == 10);
+}
+
 TEST_CASE("Fuzzy insertion and balancing tests, 64 elements", "[interval_multitree]") {
   constexpr i32 kKeysNum = 64;
 
