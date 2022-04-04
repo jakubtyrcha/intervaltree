@@ -9,7 +9,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Catch2)
 
-add_executable(Tests AvlTreeTests.cpp IntervalMultiTreeTests.cpp)
+add_executable(Tests IntervalMultiTreeTests.cpp)
 target_link_libraries(Tests PRIVATE Catch2::Catch2WithMain)
 target_compile_features(Tests PUBLIC cxx_std_20)
 
