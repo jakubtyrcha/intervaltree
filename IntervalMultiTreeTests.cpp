@@ -4,7 +4,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <random>
 #include <unordered_set>
-
+#include <memory>
 
 using f32 = float;
 using i32 = int;
@@ -190,3 +190,24 @@ TEST_CASE("Can insert multiple values and remove a single value", "[interval_mul
     REQUIRE(!queryResults.contains(1));
   }
 }
+
+TEST_CASE("Interval tree works with shared pointers", "[interval_multitree]") {
+  auto tracked = std::make_shared<int>(0);
+  auto tracked1 = std::make_shared<int>(0);
+  {
+    IntervalMultiTree<Interval, std::shared_ptr<int>> itree;
+    TreeInsert(itree, Interval{0.f, 1.f}, tracked);
+    TreeInsert(itree, Interval{0.f, 1.f}, tracked1);
+    TreeInsert(itree, Interval{0.f, 1.f}, std::make_shared<int>(0));
+    TreeInsert(itree, Interval{0.f, 1.f}, std::make_shared<int>(1));
+    REQUIRE(tracked.use_count() == 2);
+    REQUIRE(tracked1.use_count() == 2);
+    TreeRemove(itree, Interval{0.f, 1.f}, tracked);
+    REQUIRE(tracked.use_count() == 1);
+    REQUIRE(tracked1.use_count() == 2);
+  }
+  REQUIRE(tracked.use_count() == 1);
+  REQUIRE(tracked1.use_count() == 1);
+}
+
+// check shared pointer ownage (in leftermost node) when removing a node with both children
