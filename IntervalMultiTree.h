@@ -65,7 +65,7 @@ template <typename TInterval, typename TValue> struct IntervalMultiTree {
   NodePtr RightRotate(NodePtr node);
 
   NodePtr SubtreeInsert(NodePtr, TInterval i, TValue v);
-  NodePtr SubtreeRemove(NodePtr, TInterval i);
+  NodePtr SubtreeRemove(NodePtr, TInterval i, TValue v);
   std::optional<NodePtr> Find(TInterval i);
   void SubtreeCollectQueryValues(NodePtr, TIntervalEdge point,
                                  std::vector<TValue> &outAccumulator);
@@ -73,7 +73,7 @@ template <typename TInterval, typename TValue> struct IntervalMultiTree {
   // operations
   i32 GetHeight() const;
   void Insert(TInterval k, TValue v);
-  void Remove(TInterval k);
+  void Remove(TInterval k, TValue v);
   void CollectQueryValues(TIntervalEdge point,
                           std::vector<TValue> &outAccumulator);
 };
@@ -215,17 +215,29 @@ IntervalMultiTree<TInterval, TValue>::SubtreeInsert(NodePtr root, TInterval i,
 
 template <typename TInterval, typename TValue>
 IntervalMultiTree<TInterval, TValue>::NodePtr
-IntervalMultiTree<TInterval, TValue>::SubtreeRemove(NodePtr root, TInterval i) {
+IntervalMultiTree<TInterval, TValue>::SubtreeRemove(NodePtr root, TInterval i, TValue v) {
   if (root == kNullNode) {
     return root;
   }
   NodePtr newRoot = root;
   if (i.begin < NodeAt(root).key) {
-    NodeAt(root).left = SubtreeRemove(NodeAt(root).left, i);
+    NodeAt(root).left = SubtreeRemove(NodeAt(root).left, i, v);
   } else if (NodeAt(root).key < i.begin) {
-    NodeAt(root).right = SubtreeRemove(NodeAt(root).right, i);
+    NodeAt(root).right = SubtreeRemove(NodeAt(root).right, i, v);
   } else {
-    //NodeAt(root).intervalEndToValuesMap.find(i)
+    auto iter = NodeAt(root).intervalEndToValuesMap.find(i.end);
+    // it can be empty if we moved it from leftermost subnode
+    if (iter != NodeAt(root).intervalEndToValuesMap.end()) {
+      auto findIter = std::find(iter->second.begin(), iter->second.end(), v);
+      if (findIter == iter->second.end()) {
+        // can't find the value to remove, return
+        return root;
+      }
+      iter->second.erase(findIter);
+      if (iter->second.size() > 0) {
+        return root;
+      }
+    }
 
     if (NodeAt(root).left == kNullNode) {
       newRoot = NodeAt(root).right;
@@ -237,7 +249,8 @@ IntervalMultiTree<TInterval, TValue>::SubtreeRemove(NodePtr root, TInterval i) {
       NodeAt(newRoot).key = NodeAt(leftermost).key;
       NodeAt(newRoot).intervalEndToValuesMap = std::move(NodeAt(root).intervalEndToValuesMap);
       NodeAt(newRoot).right =
-          SubtreeRemove(NodeAt(root).right, NodeAt(leftermost).key);
+          SubtreeRemove(NodeAt(root).right,
+                        {NodeAt(leftermost).key, NodeAt(leftermost).key}, v);
     }
     DeleteNode(root);
   }
@@ -295,8 +308,8 @@ void IntervalMultiTree<TInterval, TValue>::Insert(TInterval i, TValue v) {
 }
 
 template <typename TInterval, typename TValue>
-void IntervalMultiTree<TInterval, TValue>::Remove(TInterval i) {
-  root_ = SubtreeRemove(root_, i);
+void IntervalMultiTree<TInterval, TValue>::Remove(TInterval i, TValue v) {
+  root_ = SubtreeRemove(root_, i, v);
 }
 
 template <typename TInterval, typename TValue>

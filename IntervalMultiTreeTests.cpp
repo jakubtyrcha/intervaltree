@@ -28,7 +28,7 @@ void TreeInsert(T &container, Interval interval, V &&value) {
 
 template <typename T, typename V>
 void TreeRemove(T &container, Interval interval, V &&value) {
-  container.Remove(interval);
+  container.Remove(interval, value);
 }
 
 template <typename V, typename T>
@@ -162,5 +162,31 @@ TEST_CASE("Can insert multiple intervals with shared begin", "[interval_multitre
     auto queryResults = TreeQuery<i32>(itree, 1.f);
     REQUIRE(!queryResults.contains(0));
     REQUIRE(queryResults.contains(1));
+  }
+}
+
+TEST_CASE("Can insert multiple values and remove a single value", "[interval_multitree]") {
+  IntervalMultiTree<Interval, i32> itree;
+  TreeInsert(itree, Interval{0.f, 1.f}, 0);
+  TreeInsert(itree, Interval{0.f, 1.f}, 1);
+
+  {
+    auto queryResults = TreeQuery<i32>(itree, 0.f);
+    REQUIRE(queryResults.contains(0));
+    REQUIRE(queryResults.contains(1));
+  }
+
+  TreeRemove(itree, Interval{0.f, 1.f}, 0);
+  {
+    auto queryResults = TreeQuery<i32>(itree, 0.f);
+    REQUIRE(!queryResults.contains(0));
+    REQUIRE(queryResults.contains(1));
+  }
+
+  TreeRemove(itree, Interval{0.f, 1.f}, 1);
+  {
+    auto queryResults = TreeQuery<i32>(itree, 0.f);
+    REQUIRE(!queryResults.contains(0));
+    REQUIRE(!queryResults.contains(1));
   }
 }
