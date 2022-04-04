@@ -255,9 +255,10 @@ IntervalMultiTree<TInterval, TValue>::SubtreeRemove(NodePtr root, TInterval i, T
         return root;
       }
       iter->second.erase(findIter);
-      if (iter->second.size() > 0) {
+      if (iter->second.size()) {
         return root;
       }
+      NodeAt(root).intervalEndToValuesMap.erase(iter);
     }
     // can't find the interval to remove, noop
     if(NodeAt(root).intervalEndToValuesMap.size()) {
@@ -272,7 +273,8 @@ IntervalMultiTree<TInterval, TValue>::SubtreeRemove(NodePtr root, TInterval i, T
       NodePtr leftermost = GetLeftermost(NodeAt(root).right);
       newRoot = NewNode();
       NodeAt(newRoot).key = NodeAt(leftermost).key;
-      NodeAt(newRoot).intervalEndToValuesMap = std::move(NodeAt(root).intervalEndToValuesMap);
+      NodeAt(newRoot).intervalEndToValuesMap = std::move(NodeAt(leftermost).intervalEndToValuesMap);
+      NodeAt(newRoot).left = NodeAt(root).left;
       NodeAt(newRoot).right =
           SubtreeRemove(NodeAt(root).right,
                         {NodeAt(leftermost).key, NodeAt(leftermost).key}, v);
@@ -325,6 +327,11 @@ IntervalMultiTree<TInterval, TValue>::Find(TInterval i) {
     }
   }
   return std::nullopt;
+}
+
+template <typename TInterval, typename TValue>
+i32 IntervalMultiTree<TInterval, TValue>::GetHeight() const {
+  return GetHeight(root_);
 }
 
 template <typename TInterval, typename TValue>

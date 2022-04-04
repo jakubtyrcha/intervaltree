@@ -51,6 +51,74 @@ std::unordered_set<V> TreeQuery(T &container, E point) {
 
 //
 
+TEST_CASE("Will balance left left case", "[interval_multitree]") {
+  IntervalMultiTree<IntInterval, i32> itree;
+  TreeInsert(itree, IntInterval{4, 6}, 4);
+  TreeInsert(itree, IntInterval{2, 6}, 2);
+  TreeInsert(itree, IntInterval{5, 6}, 5);
+  TreeInsert(itree, IntInterval{3, 6}, 3);
+  TreeInsert(itree, IntInterval{1, 6}, 1);
+  TreeInsert(itree, IntInterval{0, 6}, 0);  
+  REQUIRE(TreeQuery<int>(itree, 0).contains(0));
+  REQUIRE(TreeQuery<int>(itree, 1).contains(1));
+  REQUIRE(TreeQuery<int>(itree, 2).contains(2));
+  REQUIRE(TreeQuery<int>(itree, 3).contains(3));
+  REQUIRE(TreeQuery<int>(itree, 4).contains(4));
+  REQUIRE(TreeQuery<int>(itree, 5).contains(5));
+  REQUIRE(itree.GetHeight() == 3);
+}
+
+TEST_CASE("Test balance right right case", "[interval_multitree]") {
+  IntervalMultiTree<IntInterval, i32> itree;
+  TreeInsert(itree, IntInterval{1, 6}, 1);
+  TreeInsert(itree, IntInterval{3, 6}, 3);
+  TreeInsert(itree, IntInterval{0, 6}, 0);
+  TreeInsert(itree, IntInterval{2, 6}, 2);
+  TreeInsert(itree, IntInterval{4, 6}, 4);
+  TreeInsert(itree, IntInterval{5, 6}, 5);
+  REQUIRE(TreeQuery<int>(itree, 0).contains(0));
+  REQUIRE(TreeQuery<int>(itree, 1).contains(1));
+  REQUIRE(TreeQuery<int>(itree, 2).contains(2));
+  REQUIRE(TreeQuery<int>(itree, 3).contains(3));
+  REQUIRE(TreeQuery<int>(itree, 4).contains(4));
+  REQUIRE(TreeQuery<int>(itree, 5).contains(5));
+  REQUIRE(itree.GetHeight() == 3);
+}
+
+TEST_CASE("Will balance left right case", "[interval_multitree]") {
+  IntervalMultiTree<IntInterval, i32> itree;
+  TreeInsert(itree, IntInterval{4, 6}, 4);
+  TreeInsert(itree, IntInterval{1, 6}, 1);
+  TreeInsert(itree, IntInterval{5, 6}, 5);
+  TreeInsert(itree, IntInterval{0, 6}, 0);
+  TreeInsert(itree, IntInterval{3, 6}, 3);
+  TreeInsert(itree, IntInterval{2, 6}, 2);
+  REQUIRE(TreeQuery<int>(itree, 0).contains(0));
+  REQUIRE(TreeQuery<int>(itree, 1).contains(1));
+  REQUIRE(TreeQuery<int>(itree, 2).contains(2));
+  REQUIRE(TreeQuery<int>(itree, 3).contains(3));
+  REQUIRE(TreeQuery<int>(itree, 4).contains(4));
+  REQUIRE(TreeQuery<int>(itree, 5).contains(5));
+  REQUIRE(itree.GetHeight() == 3);
+}
+
+TEST_CASE("Will balance right left case", "[interval_multitree]") {
+  IntervalMultiTree<IntInterval, i32> itree;
+  TreeInsert(itree, IntInterval{1, 6}, 1);
+  TreeInsert(itree, IntInterval{0, 6}, 0);
+  TreeInsert(itree, IntInterval{4, 6}, 4);
+  TreeInsert(itree, IntInterval{3, 6}, 3);
+  TreeInsert(itree, IntInterval{5, 6}, 5);
+  TreeInsert(itree, IntInterval{2, 6}, 2);
+  REQUIRE(TreeQuery<int>(itree, 0).contains(0));
+  REQUIRE(TreeQuery<int>(itree, 1).contains(1));
+  REQUIRE(TreeQuery<int>(itree, 2).contains(2));
+  REQUIRE(TreeQuery<int>(itree, 3).contains(3));
+  REQUIRE(TreeQuery<int>(itree, 4).contains(4));
+  REQUIRE(TreeQuery<int>(itree, 5).contains(5));
+  REQUIRE(itree.GetHeight() == 3);
+}
+
 TEST_CASE("Will look for value in the left subtree", "[interval_multitree]") {
   IntervalMultiTree<Interval, i32> itree;
   TreeInsert(itree, Interval{0.f, 1.f}, 0);
@@ -70,6 +138,113 @@ TEST_CASE("Will look for value in the left subtree", "[interval_multitree]") {
     auto queryResults = TreeQuery<i32>(itree, -0.25f);
     REQUIRE(!queryResults.contains(0));
     REQUIRE(!queryResults.contains(-1));
+  }
+}
+
+TEST_CASE("Will balance removal left left case", "[interval_multitree]") {
+  IntervalMultiTree<IntInterval, i32> itree;
+  TreeInsert(itree, IntInterval{4, 7}, 4);
+  TreeInsert(itree, IntInterval{2, 7}, 2);
+  TreeInsert(itree, IntInterval{6, 7}, 6);
+  TreeInsert(itree, IntInterval{1, 7}, 1);
+  TreeInsert(itree, IntInterval{3, 7}, 3);
+  TreeInsert(itree, IntInterval{5, 7}, 5);
+  TreeInsert(itree, IntInterval{0, 7}, 0);
+  REQUIRE(itree.GetHeight() == 4);
+  TreeRemove(itree, IntInterval{5, 7}, 5);
+  REQUIRE(!TreeQuery<int>(itree, 5).contains(5));
+  REQUIRE(TreeQuery<int>(itree, 0).contains(0));
+  REQUIRE(TreeQuery<int>(itree, 1).contains(1));
+  REQUIRE(TreeQuery<int>(itree, 2).contains(2));
+  REQUIRE(TreeQuery<int>(itree, 3).contains(3));
+  REQUIRE(TreeQuery<int>(itree, 4).contains(4));
+  REQUIRE(TreeQuery<int>(itree, 6).contains(6));
+  REQUIRE(itree.GetHeight() == 3);
+}
+
+TEST_CASE("Will balance removal right right case", "[interval_multitree]") {
+  IntervalMultiTree<IntInterval, i32> itree;
+  TreeInsert(itree, IntInterval{2, 7}, 2);
+  TreeInsert(itree, IntInterval{1, 7}, 1);
+  TreeInsert(itree, IntInterval{4, 7}, 4);
+  TreeInsert(itree, IntInterval{0, 7}, 0);
+  TreeInsert(itree, IntInterval{3, 7}, 3);
+  TreeInsert(itree, IntInterval{5, 7}, 5);
+  TreeInsert(itree, IntInterval{6, 7}, 6);
+  REQUIRE(itree.GetHeight() == 4);
+  TreeRemove(itree, IntInterval{6, 7}, 6);
+  REQUIRE(!TreeQuery<int>(itree, 6).contains(6));
+  REQUIRE(TreeQuery<int>(itree, 0).contains(0));
+  REQUIRE(TreeQuery<int>(itree, 1).contains(1));
+  REQUIRE(TreeQuery<int>(itree, 2).contains(2));
+  REQUIRE(TreeQuery<int>(itree, 3).contains(3));
+  REQUIRE(TreeQuery<int>(itree, 4).contains(4));
+  REQUIRE(TreeQuery<int>(itree, 5).contains(5));
+  REQUIRE(itree.GetHeight() == 3);
+}
+
+TEST_CASE("Will balance removal left right case", "[interval_multitree]") {
+  IntervalMultiTree<IntInterval, i32> itree;
+  TreeInsert(itree, IntInterval{4, 7}, 4);
+  TreeInsert(itree, IntInterval{1, 7}, 1);
+  TreeInsert(itree, IntInterval{5, 7}, 5);
+  TreeInsert(itree, IntInterval{0, 7}, 0);
+  TreeInsert(itree, IntInterval{3, 7}, 3);
+  TreeInsert(itree, IntInterval{6, 7}, 6);
+  TreeInsert(itree, IntInterval{2, 7}, 2);
+  REQUIRE(itree.GetHeight() == 4);
+  TreeRemove(itree, IntInterval{6, 7}, 6);
+  REQUIRE(!TreeQuery<int>(itree, 6).contains(6));
+  REQUIRE(TreeQuery<int>(itree, 0).contains(0));
+  REQUIRE(TreeQuery<int>(itree, 1).contains(1));
+  REQUIRE(TreeQuery<int>(itree, 2).contains(2));
+  REQUIRE(TreeQuery<int>(itree, 3).contains(3));
+  REQUIRE(TreeQuery<int>(itree, 4).contains(4));
+  REQUIRE(TreeQuery<int>(itree, 5).contains(5));
+  REQUIRE(itree.GetHeight() == 3);
+}
+
+TEST_CASE("Will balance removal right left case", "[interval_multitree]") {
+  IntervalMultiTree<IntInterval, i32> itree;
+  TreeInsert(itree, IntInterval{2, 7}, 2);
+  TreeInsert(itree, IntInterval{1, 7}, 1);
+  TreeInsert(itree, IntInterval{5, 7}, 5);
+  TreeInsert(itree, IntInterval{0, 7}, 0);
+  TreeInsert(itree, IntInterval{4, 7}, 4);
+  TreeInsert(itree, IntInterval{6, 7}, 6);
+  TreeInsert(itree, IntInterval{3, 7}, 3);
+  REQUIRE(itree.GetHeight() == 4);
+  TreeRemove(itree, IntInterval{0, 7}, 0);
+  REQUIRE(!TreeQuery<int>(itree, 0).contains(0));
+  REQUIRE(TreeQuery<int>(itree, 1).contains(1));
+  REQUIRE(TreeQuery<int>(itree, 2).contains(2));
+  REQUIRE(TreeQuery<int>(itree, 3).contains(3));
+  REQUIRE(TreeQuery<int>(itree, 4).contains(4));
+  REQUIRE(TreeQuery<int>(itree, 5).contains(5));
+  REQUIRE(TreeQuery<int>(itree, 6).contains(6));
+  REQUIRE(itree.GetHeight() == 3);
+}
+
+TEST_CASE("Fuzzy insertion and balancing tests, 64 elements", "[interval_multitree]") {
+  constexpr i32 kKeysNum = 64;
+
+  std::array<i32, kKeysNum> keys;
+  for (i32 i = 0; i < kKeysNum; i++) {
+    keys[i] = i;
+  }
+  std::mt19937 g{0};
+
+  const i32 kSequences = 8;
+  for (i32 s = 0; s < kSequences; s++) {
+    std::shuffle(keys.begin(), keys.end(), g);
+    IntervalMultiTree<IntInterval, i32> itree;
+    for (i32 i = 0; i < kKeysNum; i++) {
+      TreeInsert(itree, IntInterval{keys[i], 64}, keys[i]);
+    }
+    for (i32 i = 0; i < kKeysNum; i++) {
+      REQUIRE(TreeQuery<int>(itree, i).contains(i));
+    }
+    REQUIRE(itree.GetHeight() <= 7);
   }
 }
 
